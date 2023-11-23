@@ -1,0 +1,6 @@
+bin/
+
+steps.md
+.env
+
+go.sum
