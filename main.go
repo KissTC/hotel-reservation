@@ -13,8 +13,17 @@ import (
 )
 
 const dburi = "mongodb://localhost:27017"
-const dbname = "hotel_reservation"
-const userColl = "users" // collection
+
+//const dbname = "hotel_reservation"
+//const userColl = "users" // collection
+
+// Create a new fiber instance with custom config
+var config = fiber.Config{
+	// Override default error handler
+	ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+		return ctx.JSON(map[string]string{"error": err.Error()})
+	},
+}
 
 func main() {
 
@@ -29,7 +38,7 @@ func main() {
 	// handler init
 	userHandler := api.NewUserHandler(db.NewMongoUserStore(client))
 
-	app := fiber.New()
+	app := fiber.New(config)
 	apiv1 := app.Group("api/v1")
 
 	apiv1.Get("/user", userHandler.HandleGetUser)
