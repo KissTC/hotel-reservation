@@ -15,6 +15,8 @@ const userColl = "users"
 // puede ser mongodb, postgress etc
 type UserStore interface {
 	GetUserById(context.Context, string) (*types.User, error)
+	GetUsers(context.Context) ([]*types.User, error)
+	CreateUser(context.Context, *types.User) (*types.User, error)
 }
 
 // this will be the implementation of the interface,
@@ -30,6 +32,16 @@ func NewMongoUserStore(c *mongo.Client) *MongoUserStroe {
 		client: c,
 		coll:   coll,
 	}
+}
+
+func (ms *MongoUserStroe) CreateUser(ctx context.Context, user *types.User) (*types.User, error) {
+	res, err := ms.coll.InsertOne(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	user.ID = res.InsertedID.(primitive.ObjectID)
+	return user, nil
 }
 
 func (ms *MongoUserStroe) GetUserById(ctx context.Context, id string) (*types.User, error) {
@@ -53,3 +65,18 @@ func (ms *MongoUserStroe) GetUserById(ctx context.Context, id string) (*types.Us
 // asi que creamos una helper function en db.go
 // la helper function se cambio a una validacion en el metodo get user by id
 // debido a la prueba de obtener un usuario erroneo
+
+func (ms *MongoUserStroe) GetUsers(ctx context.Context) ([]*types.User, error) {
+	cur, err := ms.coll.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var users []*types.User
+	if err := cur.All(ctx, &users); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
