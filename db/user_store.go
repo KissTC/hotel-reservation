@@ -17,6 +17,8 @@ type UserStore interface {
 	GetUserById(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	CreateUser(context.Context, *types.User) (*types.User, error)
+	DeleteUser(context.Context, string) error
+	UpdateUser(context.Context, bson.M, types.UpdateUserParams) error
 }
 
 // this will be the implementation of the interface,
@@ -79,4 +81,35 @@ func (ms *MongoUserStroe) GetUsers(ctx context.Context) ([]*types.User, error) {
 	}
 
 	return users, nil
+}
+
+func (ms *MongoUserStroe) DeleteUser(ctx context.Context, id string) error {
+	// esto se ocupa porque _id de mongo es de tipo object id, no string
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	//TODO: check if we need the res, res only have the deletecount for how many documents deleted
+	_, err = ms.coll.DeleteOne(ctx, bson.M{"_id": oid})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ms *MongoUserStroe) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error {
+
+	update := bson.D{
+		{
+			Key: "$set", Value: params.ToBSON(),
+		},
+	}
+
+	_, err := ms.coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

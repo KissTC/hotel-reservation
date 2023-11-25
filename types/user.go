@@ -5,15 +5,16 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// const (
-// 	minFirstNameLen = 2
-// 	minLastNameLen  = 2
-// 	minPasswordLen  = 7
-// )
+const (
+	minFirstNameLen = 2
+	minLastNameLen  = 2
+	minPasswordLen  = 7
+)
 
 type CreateUserParams struct {
 	FirstName string `json:"firstName" validate:"required,min=2,max=100"`
@@ -22,24 +23,42 @@ type CreateUserParams struct {
 	Password  string `json:"password"  validate:"required,min=7"`
 }
 
-func (params CreateUserParams) Validate(ctx context.Context) error {
+type UpdateUserParams struct {
+	FirstName string `json:"firstName" validate:"required,min=2,max=100"`
+	LastName  string `json:"lastName"  validate:"required,min=2,max=100"`
+}
+
+func (p UpdateUserParams) ToBSON() bson.M {
+	m := bson.M{}
+	if len(p.FirstName) > 0 {
+		m["firstName"] = p.FirstName
+	}
+	if len(p.LastName) > 0 {
+		m["lastName"] = p.LastName
+	}
+
+	return m
+}
+
+func (params CreateUserParams) Validate(ctx context.Context) map[string]string {
 	validate := validator.New()
+	errors := map[string]string{}
 	if err := validate.StructCtx(ctx, params); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			for _, fieldError := range validationErrors {
 				switch fieldError.Field() {
 				case "FirstName":
-					return fmt.Errorf("error en el campo 'FirstName': %s", fieldError.Tag())
+					errors["firstName"] = fmt.Sprintf("firstName should be at least: %d characters", minFirstNameLen)
 				case "LastName":
-					return fmt.Errorf("error en el campo 'LastName': %s", fieldError.Tag())
+					errors["lastName"] = fmt.Sprintf("lastName should be at least %d characters", minLastNameLen)
 				case "Email":
-					return fmt.Errorf("error en el campo 'Email': %s", fieldError.Tag())
+					errors["email"] = "email is invalid"
 				case "Password":
-					return fmt.Errorf("error en el campo 'Password': %s", fieldError.Tag())
+					errors["password"] = fmt.Sprintf("password should be at least: %d characters", minPasswordLen)
 				}
 			}
 		}
-		return fmt.Errorf("error en la validación: %v", err)
+		return errors
 	}
 	return nil
 }
@@ -47,7 +66,7 @@ func (params CreateUserParams) Validate(ctx context.Context) error {
 type User struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	FirstName         string             `bson:"firstName" json:"firstName"`
-	LastName          string             `bson:"lastName" json:"lasttName"`
+	LastName          string             `bson:"lastName" json:"lastName"`
 	Email             string             `bson:"email" json:"email"`
 	EncryptedPassword string             `bson:"encryptedPassword" json:"-"`
 }
