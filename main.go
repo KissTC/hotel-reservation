@@ -36,7 +36,7 @@ func main() {
 	}
 
 	// handler init
-	userHandler := api.NewUserHandler(db.NewMongoUserStore(client))
+	userHandler := api.NewUserHandler(db.NewMongoUserStore(client, "hotel_reservation"))
 
 	app := fiber.New(config)
 	apiv1 := app.Group("api/v1")

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kisstc/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,9 +12,14 @@ import (
 
 const userColl = "users"
 
+type Dropper interface {
+	Drop(context.Context) error
+}
+
 // tipo user store interface para implementar lo que queremos
 // puede ser mongodb, postgress etc
 type UserStore interface {
+	Dropper
 	GetUserById(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	CreateUser(context.Context, *types.User) (*types.User, error)
@@ -28,8 +34,8 @@ type MongoUserStroe struct {
 	coll   *mongo.Collection
 }
 
-func NewMongoUserStore(c *mongo.Client) *MongoUserStroe {
-	coll := c.Database(DBNAME).Collection(userColl)
+func NewMongoUserStore(c *mongo.Client, dbname string) *MongoUserStroe {
+	coll := c.Database(dbname).Collection(userColl)
 	return &MongoUserStroe{
 		client: c,
 		coll:   coll,
@@ -112,4 +118,9 @@ func (ms *MongoUserStroe) UpdateUser(ctx context.Context, filter bson.M, params 
 	}
 
 	return nil
+}
+
+func (s *MongoUserStroe) Drop(ctx context.Context) error {
+	fmt.Println("---- dropping user collection")
+	return s.coll.Drop(ctx)
 }
