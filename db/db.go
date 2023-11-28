@@ -2,4 +2,7 @@ package db
 
 // esta constante antes estaba en user_store
 // la movimos porque no tiene nada que ver con user
-const DBNAME = "hotel_reservation"
+const (
+	DBNAME = "hotel_reservation"
+	DBURI  = "mongodb://localhost:27017"
+)
