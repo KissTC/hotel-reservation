@@ -34,8 +34,8 @@ type MongoUserStroe struct {
 	coll   *mongo.Collection
 }
 
-func NewMongoUserStore(c *mongo.Client, dbname string) *MongoUserStroe {
-	coll := c.Database(dbname).Collection(userColl)
+func NewMongoUserStore(c *mongo.Client) *MongoUserStroe {
+	coll := c.Database(DBNAME).Collection(userColl)
 	return &MongoUserStroe{
 		client: c,
 		coll:   coll,
