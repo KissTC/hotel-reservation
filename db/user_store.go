@@ -20,6 +20,7 @@ type Dropper interface {
 // puede ser mongodb, postgress etc
 type UserStore interface {
 	Dropper
+	GetUserByEmail(context.Context, string) (*types.User, error)
 	GetUserById(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	CreateUser(context.Context, *types.User) (*types.User, error)
@@ -50,6 +51,17 @@ func (ms *MongoUserStroe) CreateUser(ctx context.Context, user *types.User) (*ty
 
 	user.ID = res.InsertedID.(primitive.ObjectID)
 	return user, nil
+}
+
+func (ms *MongoUserStroe) GetUserByEmail(ctx context.Context, email string) (*types.User, error) {
+	// para que funcione necesitamos collection y todo eso
+	// así que a MongoUserStore le agregamos más campos, hasta el momento solo tenía el atributo Client
+	var user types.User
+	if err := ms.coll.FindOne(ctx, bson.M{"email": email}).Decode(&user); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func (ms *MongoUserStroe) GetUserById(ctx context.Context, id string) (*types.User, error) {
