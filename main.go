@@ -48,7 +48,7 @@ func main() {
 		authHandler  = api.NewAuthHandler(userStore)
 		app          = fiber.New(config)
 		auth         = app.Group("/api")
-		apiv1        = app.Group("api/v1", middleware.JWTAuthentication)
+		apiv1        = app.Group("api/v1", middleware.JWTAuthentication) // middleware.JWTAuthentication
 	)
 
 	// auth

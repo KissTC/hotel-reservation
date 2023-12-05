@@ -37,7 +37,7 @@ func setup(t *testing.T) *testdb {
 	}
 
 	return &testdb{
-		UserStore: db.NewMongoUserStore(client, dbname),
+		UserStore: db.NewMongoUserStore(client),
 	}
 }
 
@@ -65,7 +65,7 @@ func TestPostUser(t *testing.T) {
 	json.NewDecoder(resp.Body).Decode(&user)
 	// bb, _ := io.ReadAll(resp.Body)
 	if user.FirstName != params.FirstName {
-		t.Errorf("expected username %s but got", params.FirstName, user.FirstName)
+		t.Errorf("expected username %s but got", params.FirstName)
 	}
 
 }
